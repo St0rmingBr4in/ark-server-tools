@@ -1208,6 +1208,20 @@ doRunBG(){
   doRun "$@" > >(while read -r l; do printf "%s: [%s] %s\n" "$(timestamp)" "${instance}" "${l}"; done) 2>&1
 }
 
+doNotifyServerIsUp() {
+  # Notify when server is up and ready - This is not perfect and can be done bettter - TODO
+  logprint "Command will wait for the server to be up, so discord message can be sent"
+  
+  while true ; do
+    if ! isTheServerUp; then
+      notify "${notifyMsgServerUp:-Server is up}"
+      break
+    else
+      sleep 5
+    fi
+  done
+}
+
 #
 # start function
 #
@@ -1273,6 +1287,9 @@ doStart() {
     fi
     tput rc; tput ed;
     logprint "The server is now running, and should be up within 10 minutes"
+
+    doNotifyServerIsUp
+    
   fi
 }
 
