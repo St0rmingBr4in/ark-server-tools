@@ -10,7 +10,7 @@
 arkstVersion='1.6'
 arkstTag=''
 arkstCommit=''
-arkstGithubRepo="FezVrasta/ark-server-tools"
+arkstGithubRepo="jacobped/ark-server-tools"
 arkstRootUseEnv=''
 arkstGlobalCfgFile='/etc/arkmanager/arkmanager.cfg'
 arkstUserCfgFile='.arkmanager.cfg'
