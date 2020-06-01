@@ -13,15 +13,18 @@ args=()
 output=/dev/null
 unstable=
 userinstall=
+userinstall2=
+installservice=
 
 for arg in "$@"; do
   case "$arg" in
     --verbose) output=/dev/fd/1; ;;
     --output=*) output="${1#--output=}"; ;;
     --unstable) unstable=1; ;;
-    --perform-user-install) userinstall=yes; ;;
+    --perform-user-install) userinstall2=yes; ;;
+    --yes-i-really-want-to-perform-a-user-install) userinstall=yes; ;;
     *)
-      if [ -n "$channel" ]; then
+      if [[ -n "$channel" || "$arg" == --* ]]; then
         args+="$arg"
       else
         channel="$arg"
@@ -34,16 +37,28 @@ if [ -z "$channel" ]; then
   channel="master"
 fi
 
-if [[ "$steamcmd_user" == "--me" && -z "$userinstall" ]]; then
+if [[ "$steamcmd_user" == "--me" && -z "$userinstall2" ]]; then
   echo "You have requested a user-install.  You probably don't want this."
   echo "A user-install will create ~/.config/arkmanager/instances/main.cfg"
   echo "This config file will override /etc/arkmanager/instances/main.cfg"
-  echo "Add --perform-user-install if you really want this."
+  echo "Add --perform-user-install if you want this."
   exit 1
+elif [[ "$steamcmd_user" == "--me" && -z "$userinstall" ]]; then
+  echo "You have requested a user-install.  You probably don't want this."
+  echo "A user-install will create ~/.config/arkmanager/instances/main.cfg"
+  echo "This config file will override /etc/arkmanager/instances/main.cfg"
+  echo "Add --yes-i-really-want-to-perform-a-user-install if you really want this."
+  exit 1
+elif [[ "$steamcmd_user" == "--me" ]]; then
+  echo "You have requested a user-install.  You probably don't want this."
+  echo "A user-install will create ~/.config/arkmanager/instances/main.cfg"
+  echo "This config file will override /etc/arkmanager/instances/main.cfg"
+  echo "You have been warned."
 fi
 
 function doInstallFromCommit(){
   local commit="$1"
+  shift
   tmpdir="$(mktemp -t -d "ark-server-tools-XXXXXXXX")"
   if [ -z "$tmpdir" ]; then echo "Unable to create temporary directory"; exit 1; fi
   cd "$tmpdir"
@@ -55,7 +70,7 @@ function doInstallFromCommit(){
          -e "s|^arkstTag='.*'|arkstTag='${tagname}'|" \
          arkmanager
   echo "Running install.sh"
-  bash install.sh "$steamcmd_user" "${reinstall_args[@]}"
+  bash install.sh "$steamcmd_user" "$@"
   result=$?
   cd /
   rm -rf "$tmpdir"
@@ -85,7 +100,7 @@ function doInstallFromRelease(){
     echo "Latest release is ${tagname}"
     echo "Getting commit for latest release..."
     local commit="$(curl -s "https://api.github.com/repos/${arkstGithubRepo}/git/refs/tags/${tagname}" | sed -n 's/^ *"sha": "\(.*\)",.*/\1/p')"
-    doInstallFromCommit "$commit"
+    doInstallFromCommit "$commit" "$@"
   else
     echo "Unable to get latest release"
     return 1
@@ -94,14 +109,15 @@ function doInstallFromRelease(){
 
 function doInstallFromBranch(){
   channel="$1"
+  shift
   commit="`curl -s "https://api.github.com/repos/${arkstGithubRepo}/git/refs/heads/${channel}" | sed -n 's/^ *"sha": "\(.*\)",.*/\1/p'`"
   
   if [ -z "$commit" ]; then
     if [ -n "$unstable" ]; then
       echo "Channel ${channel} not found - trying master"
-      doInstallFromBranch master
+      doInstallFromBranch master "$@"
     else
-      doInstallFromRelease
+      doInstallFromRelease "$@"
     fi
   else
     doInstallFromCommit "$commit"
@@ -112,8 +128,8 @@ function doInstallFromBranch(){
 cd "$TEMP"
 
 if [ "$channel" = "master" ] && [ -z "$unstable" ]; then
-  doInstallFromRelease
+  doInstallFromRelease "${args[@]}"
 else
-  doInstallFromBranch "$channel"
+  doInstallFromBranch "$channel" "${args[@]}"
 fi
 
