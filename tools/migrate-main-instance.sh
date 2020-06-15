@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 configfile="$1"
 instancefile="$2"
 

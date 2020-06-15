@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 configfile="$1"
 newopts=( arkbackupdir arkautorestartfile install_bindir install_libexecdir install_datadir mod_appid )
 newopt_steamcmd_appinfocache="${PREFIX}/Steam/appcache/appinfo.vdf"

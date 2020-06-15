@@ -2,6 +2,8 @@
 #
 # uninstall-user.sh
 
+set -e
+
 BINDIR="/home/steam/bin"
 DATADIR="/home/steam/.local/share/arkmanager"
 

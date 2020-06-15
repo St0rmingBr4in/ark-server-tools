@@ -2,6 +2,8 @@
 #
 # uninstall.sh
 
+set -e
+
 BINDIR="/usr/bin"
 DATADIR="/usr/share/arkmanager"
 LIBEXECDIR="/usr/libexec/arkmanager"

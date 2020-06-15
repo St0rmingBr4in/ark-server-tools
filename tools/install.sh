@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 userinstall=no
 steamcmd_user=
 showusage=no
